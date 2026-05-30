@@ -9,8 +9,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="拼图游戏">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'><rect width='192' height='192' rx='36' fill='%231a1a2e'/><text x='96' y='120' text-anchor='middle' font-size='88'>🧩</text></svg>">
-<link rel="manifest" id="manifestLink" href="">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{
@@ -504,6 +504,69 @@ button.green:hover{ background:#34d399; }
 }
 .theme-edit-actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
 
+/* ============ 魔法书开场动画 ============ */
+#introOverlay{
+  position:fixed; inset:0; z-index:9999; display:flex;
+  flex-direction:column; align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at center, #1a1040 0%, #0a0a1e 70%, #000 100%);
+  overflow:hidden;
+}
+#introCanvas{ position:absolute; inset:0; pointer-events:none; z-index:2; }
+.magic-book{ position:relative; z-index:3; perspective:1200px; }
+.book-cover{
+  width:160px; height:210px; border-radius:8px 20px 20px 8px;
+  background:linear-gradient(135deg, #5c2d91 0%, #3b1f5e 40%, #2d1548 100%);
+  box-shadow:0 0 40px rgba(138,43,226,0.4), 0 8px 32px rgba(0,0,0,0.6);
+  border:3px solid #8b5cf6; border-left:8px solid #6d28d9;
+  position:relative;
+  transform-origin:left center;
+  animation:bookRise .6s cubic-bezier(.34,1.56,.64,1) forwards, bookOpen .9s ease-in-out .7s forwards;
+}
+.book-cover::after{ content:''; position:absolute; inset:12px; border:1px solid rgba(255,255,255,0.08); border-radius:2px 14px 14px 2px; }
+.book-page{
+  position:absolute; inset:8px 8px 8px 20px; background:#fef3c7;
+  border-radius:2px 12px 12px 2px; opacity:0;
+  animation:pageReveal .5s ease .8s forwards;
+  box-shadow:inset 0 0 30px rgba(251,191,36,0.2);
+}
+.book-glow{
+  position:absolute; top:50%; left:50%; width:10px; height:10px;
+  border-radius:50%; background:rgba(251,191,36,0.6);
+  transform:translate(-50%,-50%); opacity:0; z-index:-1;
+  animation:glowExpand 2s ease-out .9s forwards;
+}
+@keyframes bookRise{
+  0%{ transform:translateY(120px) scale(0.7); opacity:0; }
+  100%{ transform:translateY(0) scale(1); opacity:1; }
+}
+@keyframes bookOpen{
+  0%{ transform:rotateY(0); }
+  100%{ transform:rotateY(-175deg); }
+}
+@keyframes pageReveal{
+  0%{ opacity:0; }
+  100%{ opacity:1; }
+}
+@keyframes glowExpand{
+  0%{ transform:translate(-50%,-50%) scale(0); opacity:0; }
+  50%{ transform:translate(-50%,-50%) scale(30); opacity:0.3; }
+  100%{ transform:translate(-50%,-50%) scale(60); opacity:0; }
+}
+.intro-title{
+  position:relative; z-index:4; font-size:48px; font-weight:900;
+  color:#fbbf24; opacity:0; margin-top:30px;
+  text-shadow:0 0 30px rgba(251,191,36,0.7),0 0 60px rgba(251,191,36,0.4),0 0 100px rgba(251,191,36,0.2);
+  animation:titleReveal .8s cubic-bezier(.34,1.56,.64,1) 1.3s forwards;
+}
+.intro-sub{
+  position:relative; z-index:4; font-size:16px; color:#aaa; opacity:0; margin-top:8px;
+  animation:titleReveal .6s ease 1.6s forwards;
+}
+@keyframes titleReveal{
+  0%{ opacity:0; transform:translateY(20px); }
+  100%{ opacity:1; transform:translateY(0); }
+}
+
 /* ============ 响应式：平板 (≤1024px) ============ */
 @media(max-width:1024px){
   .wrap{ padding:12px; gap:14px; }
@@ -585,8 +648,20 @@ button.green:hover{ background:#34d399; }
 </head>
 <body>
 
+<!-- 魔法书开场动画 -->
+<div id="introOverlay">
+  <canvas id="introCanvas"></canvas>
+  <div class="magic-book" id="magicBook">
+    <div class="book-cover"></div>
+    <div class="book-page"></div>
+    <div class="book-glow"></div>
+  </div>
+  <div class="intro-title" id="introTitle">🧩 魔法拼图</div>
+  <div class="intro-sub" id="introSub">📖 翻开魔法书，开启拼图之旅 ✨</div>
+</div>
+
 <div class="toast" id="toast"></div>
-<div id="installHint" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:500; background:rgba(0,0,0,0.92); color:#fbbf24; padding:12px 24px; border-radius:28px; font-size:14px; font-weight:600; border:1px solid rgba(251,191,36,0.5); cursor:pointer; white-space:nowrap; box-shadow:0 4px 24px rgba(0,0,0,0.7); animation:victoryIn .4s ease;" onclick="this.style.display='none'" title="点击关闭">📲 点击添加到主屏幕，像App一样使用</div>
+<div id="installHint"style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:500; background:rgba(0,0,0,0.92); color:#fbbf24; padding:12px 24px; border-radius:28px; font-size:14px; font-weight:600; border:1px solid rgba(251,191,36,0.5); cursor:pointer; white-space:nowrap; box-shadow:0 4px 24px rgba(0,0,0,0.7); animation:victoryIn .4s ease;" onclick="this.style.display='none'" title="点击关闭">📲 点击添加到主屏幕，像App一样使用</div>
 
 <div id="cropModal">
   <div class="crop-inner">
@@ -749,10 +824,11 @@ function switchPuzzleMode(mode){
   });
   document.getElementById('slidePanel').style.display=mode==='slide'?'':'none';
   document.getElementById('freePanel').style.display=mode==='free'?'':'none';
+  // 给浏览器足够时间完成 layout（特别是 aspect-ratio 计算）
   setTimeout(function(){
     if(mode==='slide' && window.renderSlide) window.renderSlide();
     if(mode==='free' && window.renderFree) window.renderFree();
-  },30);
+  },120);
 }
 </script>
 <script>
@@ -760,18 +836,16 @@ function switchPuzzleMode(mode){
 try{
 var gridSize=3, curImgUrl='', curPresetIdx=0, showNums=false, puzzleShape='block';
 
-// ============ PWA 安装支持 ============
-(function setupPWA(){
-  var manifest={
-    name:'拼图游戏', short_name:'拼图',
-    start_url:'.', display:'standalone',
-    background_color:'#1a1a2e', theme_color:'#1a1a2e',
-    icons:[{src:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="36" fill="#1a1a2e"/><text x="96" y="120" text-anchor="middle" font-size="88">🧩</text></svg>'),sizes:'192x192',type:'image/svg+xml'}]
-  };
-  var blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
-  var link=document.getElementById('manifestLink');
-  if(link) link.href=URL.createObjectURL(blob);
-  // 移动设备显示安装提示
+// ============ Service Worker 注册（PWA 安装支持）============
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(function(){
+    console.log('SW registered');
+  }).catch(function(){
+    // github pages 子目录下可能失败，忽略
+  });
+}
+// 移动设备显示安装提示
+(function(){
   var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   var isStandalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
   if(isMobile&&!isStandalone){
@@ -780,24 +854,142 @@ var gridSize=3, curImgUrl='', curPresetIdx=0, showNums=false, puzzleShape='block
       if(hint){ hint.style.display='block'; setTimeout(function(){ hint.style.display='none'; },6000); }
     },2000);
   }
-  // 监听安装事件
-  window.addEventListener('beforeinstallprompt',function(e){
-    e.preventDefault();
-    window._deferredPrompt=e;
-    var hint=document.getElementById('installHint');
-    if(hint){
-      hint.style.display='block';
-      hint.onclick=function(){
-        window._deferredPrompt.prompt();
-        window._deferredPrompt.userChoice.then(function(r){
-          if(r.outcome==='accepted') hint.style.display='none';
-        });
-      };
-    }
-  });
 })();
 
-// 窗口大小变化时重新计算布局（保持已放置的拼块位置）
+// ============ Part3: 魔法书开场动画 ============
+(function playIntro(){
+  var overlay=document.getElementById('introOverlay');
+  var canvas=document.getElementById('introCanvas');
+  var ctx=canvas.getContext('2d');
+  var particles=[], W=window.innerWidth, H=window.innerHeight;
+  canvas.width=W; canvas.height=H;
+  // 生成星光粒子
+  for(var i=0;i<80;i++){
+    particles.push({
+      x:W/2+(Math.random()-0.5)*40, y:H/2+(Math.random()-0.5)*40,
+      vx:(Math.random()-0.5)*3, vy:(Math.random()-0.5)*3-1,
+      life:1, decay:0.003+Math.random()*0.008,
+      size:1+Math.random()*3, color:Math.random()<0.3?'#fbbf24':'#fff'
+    });
+  }
+  function drawParticles(){
+    ctx.clearRect(0,0,W,H);
+    for(var i=0;i<particles.length;i++){
+      var p=particles[i];
+      p.x+=p.vx; p.y+=p.vy; p.life-=p.decay;
+      if(p.life<=0){ p.x=W/2+(Math.random()-0.5)*20; p.y=H/2+(Math.random()-0.5)*20; p.life=1; }
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size*p.life,0,Math.PI*2);
+      ctx.fillStyle=p.color; ctx.globalAlpha=p.life*0.8; ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    requestAnimationFrame(drawParticles);
+  }
+  drawParticles();
+  // 4.5秒后淡出
+  setTimeout(function(){
+    overlay.style.transition='opacity .6s';
+    overlay.style.opacity='0';
+    setTimeout(function(){ overlay.style.display='none'; },600);
+  },4500);
+})();
+
+// ============ Part4: 彩虹解锁特效 ============
+function playRainbowUnlock(mode){
+  var panel=document.getElementById(mode==='slide'?'slidePanel':'freePanel');
+  var board=document.getElementById(mode==='slide'?'puzzleGrid':'freeBoard');
+  if(!board) return;
+  var tiles=board.querySelectorAll(mode==='slide'?'.tile:not(.empty)':'.free-piece.snapped');
+  if(tiles.length===0) return;
+  var total=tiles.length;
+  // 依次扫过每块拼图
+  Array.prototype.forEach.call(tiles,function(tile,i){
+    setTimeout(function(){
+      tile.style.transition='box-shadow .15s, filter .15s';
+      tile.style.boxShadow='0 0 20px rgba(255,0,0,0.7), 0 0 40px rgba(255,165,0,0.5), 0 0 60px rgba(255,255,0,0.4), 0 0 80px rgba(0,255,0,0.3), 0 0 100px rgba(0,0,255,0.3)';
+      tile.style.filter='hue-rotate('+(i*15%360)+'deg) brightness(1.2)';
+      setTimeout(function(){ tile.style.filter=''; tile.style.boxShadow=''; },600);
+    },i*80);
+  });
+  // 光柱
+  setTimeout(function(){
+    var pillar=document.createElement('div');
+    pillar.style.cssText='position:absolute; left:50%; bottom:50%; width:6px; height:0; transform:translateX(-50%); background:linear-gradient(to top, red,orange,yellow,green,blue,indigo,violet); border-radius:3px; z-index:200; pointer-events:none; box-shadow:0 0 30px rgba(255,255,255,0.5); transition:height .6s ease-out;';
+    panel.style.position='relative'; panel.style.overflow='visible';
+    panel.appendChild(pillar);
+    void pillar.offsetWidth;
+    pillar.style.height='120%';
+    setTimeout(function(){ pillar.remove(); },800);
+  },total*80+200);
+  // 星星散落
+  setTimeout(function(){
+    for(var i=0;i<50;i++){
+      var star=document.createElement('div');
+      star.textContent=['✦','✧','⭐','💫','✨'][Math.floor(Math.random()*5)];
+      star.style.cssText='position:absolute; left:'+(20+Math.random()*60)+'%; top:'+(10+Math.random()*80)+'%; font-size:'+(10+Math.random()*20)+'px; z-index:201; pointer-events:none; animation:starFall '+(0.8+Math.random()*1.5)+'s ease-in forwards;';
+      panel.appendChild(star);
+      setTimeout(function(){ star.remove(); },2000);
+    }
+  },total*80+400);
+}
+// 星星飘落动画
+var _starFallStyle=document.createElement('style');
+_starFallStyle.textContent='@keyframes starFall{0%{opacity:1;transform:translateY(0) rotate(0deg) scale(1);}100%{opacity:0;transform:translateY(150px) rotate(360deg) scale(0.2);}}';
+document.head.appendChild(_starFallStyle);
+
+// ============ Part5: 星光舞台胜利画面 ============
+function showVictoryEnhanced(mode,moves,sec){
+  stopBGM();
+  // 彩虹解锁特效
+  playRainbowUnlock(mode);
+  // 降低BGM音量，播放胜利钟声
+  if(bgmGain){ bgmGain.gain.setValueAtTime(0.03,audioCtx.currentTime); }
+  playVictoryChime();
+  // 恢复BGM音量
+  setTimeout(function(){ if(bgmGain) bgmGain.gain.linearRampToValueAtTime(0.11,audioCtx.currentTime+0.5); },2000);
+  // 显示胜利画面
+  setTimeout(function(){
+    var mm=Math.floor(sec/60), ss=sec%60;
+    var timeStr=(mm<10?'0':'')+mm+':'+(ss<10?'0':'')+ss;
+    // 星星评级
+    var stars=3;
+    if(moves>gridSize*gridSize*4) stars=1;
+    else if(moves>gridSize*gridSize*2) stars=2;
+    var starHTML='';
+    for(var i=0;i<3;i++) starHTML+='<span style="font-size:36px;'+(i<stars?'':'opacity:0.25;')+'">⭐</span>';
+    var statsHTML='模式：<b>'+(mode==='slide'?'滑动拼图':'自由拼图')+'</b><br>步数：<b>'+moves+'</b> | 用时：<b>'+timeStr+'</b><br>'+starHTML;
+    document.getElementById('victoryStats').innerHTML=statsHTML;
+    // 显示完成图
+    var vImg=document.getElementById('victoryImage');
+    var vWrap=document.getElementById('victoryImageWrap');
+    if(curImgUrl){ vImg.src=curImgUrl; vWrap.style.display='block'; }
+    else vWrap.style.display='none';
+    document.getElementById('victoryOverlay').classList.add('show');
+    startConfetti(); playVictoryFanfare();
+    spawnVictorySparkles();
+    // 小精灵飞舞
+    spawnFairies();
+  },800);
+}
+// 小精灵飞舞
+function spawnFairies(){
+  var container=document.getElementById('victorySparkles');
+  if(!container) return;
+  var fairies=['🧚','🦋','🌸','💖','🕊'];
+  for(var i=0;i<5;i++){
+    var f=document.createElement('span');
+    f.textContent=fairies[i];
+    f.style.cssText='position:absolute; font-size:'+(24+i*6)+'px; pointer-events:none; z-index:310; left:'+(15+i*18)+'%; top:'+(30+i*12)+'%; animation:fairyFly '+(2+i*0.8)+'s ease-in-out infinite; animation-delay:'+(i*0.3)+'s;';
+    container.appendChild(f);
+  }
+  var fairyStyle=document.getElementById('fairyAnimStyle');
+  if(!fairyStyle){
+    fairyStyle=document.createElement('style');
+    fairyStyle.id='fairyAnimStyle';
+    fairyStyle.textContent='@keyframes fairyFly{0%,100%{transform:translate(0,0) rotate(0deg);}25%{transform:translate(30px,-20px) rotate(5deg);}50%{transform:translate(-20px,-40px) rotate(-3deg);}75%{transform:translate(-30px,-15px) rotate(4deg);}}';
+    document.head.appendChild(fairyStyle);
+  }
+}
+
 var _resizeTimer=null;
 window.addEventListener('resize',function(){
   clearTimeout(_resizeTimer);
@@ -1875,32 +2067,25 @@ var bgmBass=[
 function startBGM(){
   if(bgmPlaying||audioMuted) return;
   initAudio(); bgmPlaying=true;
-  if(!bgmGain){ bgmGain=audioCtx.createGain(); bgmGain.gain.value=0.08; bgmGain.connect(audioCtx.destination); }
+  if(!bgmGain){ bgmGain=audioCtx.createGain(); bgmGain.gain.value=0.11; bgmGain.connect(audioCtx.destination); }
   function loop(){
     if(!bgmPlaying||!audioCtx) return;
-    var now=audioCtx.currentTime, beat=0.32;
-    // 音量渐入
-    var env=audioCtx.createGain(); env.gain.value=0.07; env.connect(bgmGain);
+    var now=audioCtx.currentTime, beat=0.34;
     for(var i=0;i<bgmMelody.length;i++){
       var n=bgmMelody[i];
-      playNote(n[0],n[1]*beat,n[2]*beat*0.85,0.08,'square',0.03);
+      playNote(n[0],n[1]*beat,n[2]*beat*0.80,0.09,'sine');
+      // 八音盒泛音
+      playNote(n[0]*2,n[1]*beat+0.005,n[2]*beat*0.4,0.025,'sine');
     }
     for(var j=0;j<bgmBass.length;j++){
       var b=bgmBass[j];
-      playNote(b[0],b[1]*beat,b[2]*beat*0.9,0.06,'triangle');
+      playNote(b[0],b[1]*beat,b[2]*beat*0.85,0.05,'triangle');
     }
-    // 小打击乐
+    // 星星音（高频点缀，非噪音）
+    for(var k=0;k<18;k+=2){
+      playNote(1568,k*beat,0.05,0.02,'sine');
+    }
     var bLen=18*beat;
-    var buf=audioCtx.createBuffer(1,audioCtx.sampleRate*0.015,audioCtx.sampleRate);
-    var d=buf.getChannelData(0);
-    for(var i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(audioCtx.sampleRate*0.002));
-    for(var k=0;k<18;k++){
-      if(k%2===0){
-        var ns=audioCtx.createBufferSource(), ng=audioCtx.createGain();
-        ns.buffer=buf; ng.gain.setValueAtTime(0.03,now+k*beat); ng.connect(bgmGain);
-        ns.connect(ng); ns.start(now+k*beat); ns.stop(now+k*beat+0.015);
-      }
-    }
     bgmTimer=setTimeout(loop, bLen*1000-50);
   }
   loop();
@@ -2333,24 +2518,29 @@ var fBoardW=920, fBoardH=480, fTileSize, fAssembledSize, fAssembledLeft, fAssemb
 function calcFreeLayout(){
   // 动态读取实际面板尺寸（适配手机/平板）
   var boardEl=document.getElementById('freeBoard');
+  fBoardW=0; fBoardH=0;
   if(boardEl){
     fBoardW=boardEl.clientWidth;
     fBoardH=boardEl.clientHeight;
-    // 面板隐藏时(clientWidth=0)，用CSS计算值或估算
-    if(!fBoardW||!fBoardH){
+  }
+  // 面板隐藏/尺寸为0时，用CSS计算值或视口估算
+  if(!fBoardW||!fBoardH){
+    if(boardEl){
       var cs=getComputedStyle(boardEl);
-      fBoardW=parseInt(cs.width)||0;
-      fBoardH=parseInt(cs.height)||0;
-      if(!fBoardW||!fBoardH){
-        // 最终回退：基于视口估算
-        var vw=window.innerWidth;
-        if(vw<=640) fBoardW=Math.round(vw*0.92);
-        else if(vw<=1024) fBoardW=Math.round(Math.min(vw*0.75,700));
-        else fBoardW=920;
-        fBoardH=Math.round(fBoardW*3/4);
-      }
+      var cw=parseInt(cs.width), ch=parseInt(cs.height);
+      if(cw&&cw>10) fBoardW=cw;
+      if(ch&&ch>10) fBoardH=ch;
+    }
+    if(!fBoardW||!fBoardH){
+      var vw=window.innerWidth||document.documentElement.clientWidth||1024;
+      if(vw<=640){ fBoardW=Math.round(vw*0.92); fBoardH=Math.round(fBoardW*3/4); }
+      else if(vw<=1024){ fBoardW=Math.round(Math.min(vw*0.75,700)); fBoardH=Math.round(fBoardW*3/4); }
+      else{ fBoardW=920; fBoardH=480; }
     }
   }
+  // 绝对兜底
+  if(!fBoardW||fBoardW<100) fBoardW=920;
+  if(!fBoardH||fBoardH<100) fBoardH=480;
   // 拼图区占比随难度增大: 3×3=44%, 4×4=50%, 5×5=56%, 6×6=62%
   var ratio=0.38+gridSize*0.04;
   // 手机竖屏时用更大的拼图区比例
@@ -2512,62 +2702,65 @@ function renderFree(){
 }
 window.renderFree=renderFree;
 function freeDragStart(e,idx){
+  if(!fPieces||!fPieces[idx]) return;
   if(fPieces[idx].snapped) return;
   e.preventDefault();
   fDrag=idx;
-  var piece=fBoard.querySelector('[data-idx="'+idx+'"]');
-  if(piece) piece.classList.add('dragging');
-  playPickupSFX();
-  if(!fTimer) startBGM();
-  var cx=e.touches?e.touches[0].clientX:e.clientX;
-  var cy=e.touches?e.touches[0].clientY:e.clientY;
-  fDragStartX=cx; fDragStartY=cy;
+  fDragStartX=(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX;
+  fDragStartY=(e.touches&&e.touches[0])?e.touches[0].clientY:e.clientY;
   fPieceStartX=fPieces[idx].x; fPieceStartY=fPieces[idx].y;
+  var piece=fBoard.querySelector('[data-idx="'+idx+'"]');
+  if(piece){ piece.classList.add('dragging'); piece.style.transition='none'; }
+  try{ playPickupSFX(); }catch(e2){}
+  if(!fTimer){ try{ startBGM(); }catch(e3){} }
 }
 function freeDragMove(e){
   if(fDrag===null) return;
   e.preventDefault();
-  var cx=e.touches?e.touches[0].clientX:e.clientX;
-  var cy=e.touches?e.touches[0].clientY:e.clientY;
+  var cx=(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX;
+  var cy=(e.touches&&e.touches[0])?e.touches[0].clientY:e.clientY;
+  if(cx==null||cy==null) return;
   var dx=cx-fDragStartX, dy=cy-fDragStartY;
+  var tileSz=fTileSize||60;
+  var bw=fBoardW||800, bh=fBoardH||400;
   var nx=fPieceStartX+dx, ny=fPieceStartY+dy;
-  nx=Math.max(0,Math.min(fBoardW-fTileSize,nx));
-  ny=Math.max(0,Math.min(fBoardH-fTileSize,ny));
+  nx=Math.max(0,Math.min(bw-tileSz,nx));
+  ny=Math.max(0,Math.min(bh-tileSz,ny));
 
   // 磁吸1：散布区网格对齐 (增强版)
   var p=fPieces[fDrag];
-  var ttx=fAssembledLeft+(p.id%gridSize)*fTileSize;
-  var tty=fAssembledTop+Math.floor(p.id/gridSize)*fTileSize;
-  if(nx>fSplitX+14){
-    var gx=fSplitX+14+Math.round((nx-fSplitX-14)/fTileSize)*fTileSize;
-    var gy=14+Math.round((ny-14)/fTileSize)*fTileSize;
+  var al=fAssembledLeft||0, at=fAssembledTop||0, sx=fSplitX||Math.round(bw*0.5);
+  var ttx=al+(p.id%gridSize)*tileSz;
+  var tty=at+Math.floor(p.id/gridSize)*tileSz;
+  if(nx>sx+14){
+    var gx=sx+14+Math.round((nx-sx-14)/tileSz)*tileSz;
+    var gy=14+Math.round((ny-14)/tileSz)*tileSz;
     var gdx=nx-gx, gdy=ny-gy;
     var gdist=Math.sqrt(gdx*gdx+gdy*gdy);
-    // 扩大磁吸范围，增强吸附力度
-    if(gdist<fTileSize*0.55){
+    if(gdist<tileSz*0.55){
       nx+=(gx-nx)*0.45; ny+=(gy-ny)*0.45;
     }
   }
   // 磁吸2：靠近正确目标时强力吸附 (增强版)
-  var cxP=nx+fTileSize/2, cyP=ny+fTileSize/2;
-  var cxT=ttx+fTileSize/2, cyT=tty+fTileSize/2;
+  var cxP=nx+tileSz/2, cyP=ny+tileSz/2;
+  var cxT=ttx+tileSz/2, cyT=tty+tileSz/2;
   var dist=Math.sqrt(Math.pow(cxP-cxT,2)+Math.pow(cyP-cyT,2));
 
-  if(dist<fTileSize*1.1){
-    var pull=Math.min(0.55, fTileSize*1.1/(dist+1)*0.28);
+  if(dist<tileSz*1.1){
+    var pull=Math.min(0.55, tileSz*1.1/(dist+1)*0.28);
     nx+=(ttx-nx)*pull; ny+=(tty-ny)*pull;
   }
 
   fPieces[fDrag].x=nx; fPieces[fDrag].y=ny;
   var piece=fBoard.querySelector('[data-idx="'+fDrag+'"]');
-  var jp=(puzzleShape==='curved'?fTileSize*0.22:0);
+  var jp=(puzzleShape==='curved'?tileSz*0.22:0);
   if(piece){ piece.style.left=(nx-jp)+'px'; piece.style.top=(ny-jp)+'px'; }
 
   // 高亮目标格
   var allHints=fBoard.querySelectorAll('.free-cell-hint');
   for(var h=0;h<allHints.length;h++){
     var hid=parseInt(allHints[h].dataset.cellId);
-    allHints[h].style.opacity=(hid===p.id&&dist<fTileSize*0.85)?'1':'0';
+    allHints[h].style.opacity=(hid===p.id&&dist<tileSz*0.85)?'1':'0';
   }
 }
 function freeDragEnd(e){
@@ -2669,7 +2862,7 @@ function playVictoryFanfare(){
     var T=audioCtx.currentTime;
     function note(freq,start,dur,vol,type){
       var o=audioCtx.createOscillator(), g=audioCtx.createGain();
-      o.type=type||'square'; o.frequency.value=freq;
+      o.type=type||'sine'; o.frequency.value=freq;
       g.gain.setValueAtTime(vol,T+start);
       g.gain.exponentialRampToValueAtTime(0.001,T+start+dur);
       o.connect(g); g.connect(audioCtx.destination);
@@ -2695,6 +2888,25 @@ function playVictoryFanfare(){
     ns.buffer=buf; ng.gain.setValueAtTime(0.25,T); ng.gain.exponentialRampToValueAtTime(0.001,T+0.25);
     ns.connect(ng); ng.connect(audioCtx.destination);
     ns.start(T); ns.stop(T+0.25);
+  }catch(e){}
+}
+// 胜利魔法钟声
+function playVictoryChime(){
+  try{
+    if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    var T=audioCtx.currentTime;
+    function note2(f,s,d,v,tp){
+      var o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.type=tp||'sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(v,T+s); g.gain.exponentialRampToValueAtTime(0.0001,T+s+d);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(T+s); o.stop(T+s+d+0.1);
+    }
+    var gliss=[1046.5,1318.5,1568,2093,2637];
+    for(var i=0;i<gliss.length;i++){
+      note2(gliss[i],i*0.05,0.4,0.13,'sine');
+      note2(gliss[i]*0.75,i*0.05+0.01,0.25,0.06,'triangle');
+    }
   }catch(e){}
 }
 
@@ -2736,32 +2948,46 @@ function stopConfetti(){
 }
 
 function showVictory(mode,moves,sec){
-  var mm=Math.floor(sec/60), ss=sec%60;
-  var timeStr=(mm<10?'0':'')+mm+':'+(ss<10?'0':'')+ss;
-  document.getElementById('victoryStats').innerHTML=
-    '模式：<b>'+(mode==='slide'?'滑动拼图':'自由拼图')+'</b><br>'+
-    '步数：<b>'+moves+'</b> &nbsp;|&nbsp; 用时：<b>'+timeStr+'</b>';
-  // 显示完成的大图
-  var vImg=document.getElementById('victoryImage');
-  var vWrap=document.getElementById('victoryImageWrap');
-  if(curImgUrl){
-    vImg.src=curImgUrl;
-    vWrap.style.display='block';
-    vWrap.style.animation='none';
-    void vWrap.offsetWidth;
-    vWrap.style.animation='victoryImgReveal .8s cubic-bezier(.34,1.56,.64,1) .2s both, victoryGlow 2s ease-in-out .8s infinite';
-    // 点击放大
-    vWrap.onclick=function(){
-      document.getElementById('fullImage').src=curImgUrl;
-      document.getElementById('fullImageView').style.display='flex';
-    };
-  }else{
-    vWrap.style.display='none';
-  }
-  document.getElementById('victoryOverlay').classList.add('show');
-  startConfetti(); playVictoryFanfare();
-  // 胜利✨闪烁粒子
-  spawnVictorySparkles();
+  // Part4: 彩虹解锁特效
+  playRainbowUnlock(mode);
+  // 降低BGM，播放胜利钟声
+  if(bgmGain&&audioCtx){ bgmGain.gain.setValueAtTime(0.03,audioCtx.currentTime); }
+  stopBGM();
+  playVictoryChime();
+  // 恢复BGM
+  setTimeout(function(){ if(bgmGain&&audioCtx){ bgmGain.gain.linearRampToValueAtTime(0.11,audioCtx.currentTime+0.5); } },2200);
+
+  // 延迟显示胜利画面
+  setTimeout(function(){
+    var mm=Math.floor(sec/60), ss=sec%60;
+    var timeStr=(mm<10?'0':'')+mm+':'+(ss<10?'0':'')+ss;
+    // 星星评级
+    var total=gridSize*gridSize, stars=3;
+    if(moves>total*3) stars=1; else if(moves>total*1.5) stars=2;
+    var starHTML='';
+    for(var i=0;i<3;i++) starHTML+='<span style="font-size:36px;display:inline-block;'+(i<stars?'animation:victoryIn .4s ease '+(0.8+i*0.15)+'s both;':'opacity:0.2;')+'">⭐</span>';
+    document.getElementById('victoryStats').innerHTML=
+      '模式：<b>'+(mode==='slide'?'滑动拼图':'自由拼图')+'</b><br>'+
+      '步数：<b>'+moves+'</b> &nbsp;|&nbsp; 用时：<b>'+timeStr+'</b><br>'+starHTML;
+    // 显示完成大图
+    var vImg=document.getElementById('victoryImage');
+    var vWrap=document.getElementById('victoryImageWrap');
+    if(curImgUrl){
+      vImg.src=curImgUrl;
+      vWrap.style.display='block';
+      vWrap.style.animation='none';
+      void vWrap.offsetWidth;
+      vWrap.style.animation='victoryImgReveal .8s cubic-bezier(.34,1.56,.64,1) .2s both, victoryGlow 2s ease-in-out .8s infinite';
+      vWrap.onclick=function(){
+        document.getElementById('fullImage').src=curImgUrl;
+        document.getElementById('fullImageView').style.display='flex';
+      };
+    }else{ vWrap.style.display='none'; }
+    document.getElementById('victoryOverlay').classList.add('show');
+    startConfetti(); playVictoryFanfare();
+    spawnVictorySparkles();
+    spawnFairies();
+  },900);
 }
 function spawnVictorySparkles(){
   var container=document.getElementById('victorySparkles');
